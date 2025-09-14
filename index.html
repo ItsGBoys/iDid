@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Motivational Slideshow</title>
+<title>4Did</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
 body{display:flex;justify-content:center;align-items:center;height:100vh;background:#0d0d0d;overflow:hidden;}
@@ -11,7 +11,7 @@ body{display:flex;justify-content:center;align-items:center;height:100vh;backgro
 /* Loading Screen */
 #loading{
   position:absolute;top:0;left:0;width:100%;height:100%;background:#0d0d0d;
-  display:flex;justify-content:center;align-items:center;flex-direction:column;color:#fff;font-size:22px;text-align:center;z-index:1000;opacity:1;transition:opacity 0.8s ease;
+  display:flex;justify-content:center;align-items:center;flex-direction:column;color:#fff;font-size:22px;text-align:center;z-index:1000;transition:opacity 0.8s ease;
 }
 #loading span{
   display:block;
@@ -20,11 +20,23 @@ body{display:flex;justify-content:center;align-items:center;height:100vh;backgro
   color:#ff7eb9;
   animation: blink 1s infinite;
 }
+#startBtn{
+  margin-top:30px;
+  padding:12px 24px;
+  font-size:18px;
+  cursor:pointer;
+  border:none;
+  border-radius:8px;
+  background:#ff7eb9;
+  color:#fff;
+  transition:0.3s;
+}
+#startBtn:hover{background:#ff4eb3;}
 @keyframes blink{0%,50%,100%{opacity:1;}25%,75%{opacity:0;}}
 
 /* Slideshow */
 .card{position:relative;width:90%;max-width:900px;height:66vh;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.7);background:#000;display:none;}
-.slides{position:relative;width:100%;height:100%;}
+.slides{position:relative;width:100%;height:100%;cursor:pointer;}
 .slide{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity 1s ease;transform:scale(1.05);}
 .slide.active{opacity:1;transform:scale(1);}
 .slide img{width:100%;height:100%;object-fit:cover;border-radius:20px;}
@@ -34,6 +46,12 @@ body{display:flex;justify-content:center;align-items:center;height:100vh;backgro
 .dots{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);display:flex;gap:12px;font-size:0;}
 .dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.3);cursor:pointer;transition:all 0.4s ease;display:inline-block;}
 .dot.active{background:#ff7eb9;box-shadow:0 0 12px #ff7eb9,0 0 24px #ffb3d9;width:14px;height:14px;}
+
+/* Hidden Next/Prev buttons */
+.button{position:absolute;top:0;width:15%;height:100%;background:rgba(0,0,0,0.1);border:none;cursor:pointer;transition:background 0.2s;}
+.button:hover{background:rgba(0,0,0,0.25);}
+#prev{left:0;}
+#next{right:0;}
 </style>
 </head>
 <body>
@@ -45,6 +63,7 @@ body{display:flex;justify-content:center;align-items:center;height:100vh;backgro
 <div id="loading">
   <div>Bentar yaa teh, aa lagi nyiapin kata kata buat teteh</div>
   <span>• • •</span>
+  <button id="startBtn">Mulai Slideshow</button>
 </div>
 
 <div class="card" id="slideshow">
@@ -52,6 +71,8 @@ body{display:flex;justify-content:center;align-items:center;height:100vh;backgro
   <div class="overlay"></div>
   <div class="caption" id="caption"></div>
   <div id="dots" class="dots"></div>
+  <button class="button" id="prev"></button>
+  <button class="button" id="next"></button>
 </div>
 
 <script>
@@ -71,6 +92,9 @@ const caption=document.getElementById("caption");
 const loading=document.getElementById("loading");
 const slideshow=document.getElementById("slideshow");
 const music=document.getElementById("bgMusic");
+const startBtn=document.getElementById("startBtn");
+const prevBtn=document.getElementById("prev");
+const nextBtn=document.getElementById("next");
 
 let currentIndex=0;
 let typeTimeouts=[];
@@ -102,13 +126,7 @@ function showCaption(index){
   const text=slidesData[index].text;
   let i=0;
   setTimeout(()=>caption.classList.add("show"),200);
-  function type(){
-    if(i<text.length){
-      caption.textContent+=text[i];
-      i++;
-      typeTimeouts.push(setTimeout(type,45));
-    }
-  }
+  function type(){if(i<text.length){caption.textContent+=text[i];i++;typeTimeouts.push(setTimeout(type,45));}}
   type();
 }
 
@@ -123,10 +141,7 @@ function moveToSlide(index){
 }
 
 // auto-slide every 6 sec
-function nextSlide(){
-  currentIndex=(currentIndex+1)%slidesData.length;
-  moveToSlide(currentIndex);
-}
+function nextSlide(){currentIndex=(currentIndex+1)%slidesData.length; moveToSlide(currentIndex);}
 setInterval(nextSlide,6000);
 
 // swipe / drag
@@ -142,19 +157,20 @@ slidesContainer.addEventListener("mouseup",e=>{
 });
 slidesContainer.addEventListener("mouseleave",()=>{isDragging=false;});
 
-// init with music preload
-function initSlideshow(){
-  music.play().catch(()=>{}); 
+// next/prev hidden button click
+prevBtn.addEventListener("click",()=>{currentIndex=(currentIndex-1+slidesData.length)%slidesData.length; moveToSlide(currentIndex);});
+nextBtn.addEventListener("click",()=>{currentIndex=(currentIndex+1)%slidesData.length; moveToSlide(currentIndex);});
+
+// start slideshow + music
+startBtn.addEventListener("click",()=>{
+  music.play().catch(()=>{});
   loading.style.opacity=0;
   setTimeout(()=>{
     loading.style.display="none";
     slideshow.style.display="block";
     showCaption(0);
   },800);
-}
-
-// simulate loading 3 sec
-setTimeout(initSlideshow,3000);
+});
 </script>
 </body>
 </html>
