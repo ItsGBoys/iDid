@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Romantic Slideshow Swipe</title>
+<title>Motivational Slideshow</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
 body{display:flex;justify-content:center;align-items:center;height:100vh;background:#0d0d0d;overflow:hidden;}
 
 /* Loading Screen */
 #loading{
-  position:absolute;top:0;left:0;width:100%;height:100%;background:#0d0d0d;display:flex;justify-content:center;align-items:center;flex-direction:column;color:#fff;font-size:22px;text-align:center;z-index:1000;opacity:1;transition:opacity 0.8s ease;
+  position:absolute;top:0;left:0;width:100%;height:100%;background:#0d0d0d;
+  display:flex;justify-content:center;align-items:center;flex-direction:column;color:#fff;font-size:22px;text-align:center;z-index:1000;opacity:1;transition:opacity 0.8s ease;
 }
 #loading span{
   display:block;
@@ -19,25 +20,26 @@ body{display:flex;justify-content:center;align-items:center;height:100vh;backgro
   color:#ff7eb9;
   animation: blink 1s infinite;
 }
-@keyframes blink{
-  0%,50%,100%{opacity:1;}
-  25%,75%{opacity:0;}
-}
+@keyframes blink{0%,50%,100%{opacity:1;}25%,75%{opacity:0;}}
 
-/* Card / Slideshow */
+/* Slideshow */
 .card{position:relative;width:90%;max-width:900px;height:66vh;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.7);background:#000;display:none;}
-.slides{display:flex;transition:transform 0.5s ease; height:100%;}
-.slide{min-width:100%;height:100%;position:relative;}
-.slide img{width:100%;height:100%;object-fit:cover;filter:brightness(1);}
+.slides{position:relative;width:100%;height:100%;}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity 1s ease;transform:scale(1.05);}
+.slide.active{opacity:1;transform:scale(1);}
+.slide img{width:100%;height:100%;object-fit:cover;border-radius:20px;}
 .overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.4));pointer-events:none;border-radius:20px;}
 .caption{position:absolute;bottom:40px;width:100%;text-align:center;font-size:22px;font-weight:500;color:#fff;text-shadow:0 0 12px rgba(0,0,0,0.8);letter-spacing:1px;opacity:0;transition:opacity 0.5s ease;}
-.caption.show{opacity:1;}
+.caption.show{opacity:1; text-shadow:0 0 20px #ff7eb9;}
 .dots{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);display:flex;gap:12px;font-size:0;}
 .dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.3);cursor:pointer;transition:all 0.4s ease;display:inline-block;}
 .dot.active{background:#ff7eb9;box-shadow:0 0 12px #ff7eb9,0 0 24px #ffb3d9;width:14px;height:14px;}
 </style>
 </head>
 <body>
+
+<!-- Background Music -->
+<audio id="bgMusic" src="audio/bgsong.mp3" loop></audio>
 
 <!-- Loading Screen -->
 <div id="loading">
@@ -57,10 +59,10 @@ const slidesData=[
   {img:"images/D1.jpg",text:"Jangan takut bermimpi besar ya teh, aa percaya teteh bisa wujudkan semuanya ✨"},
   {img:"images/D2.webp",text:"Abaikan omongan orang yang ngeremehin teteh, fokus sama tujuan teteh ❤️"},
   {img:"images/D3.png",text:"Buktikan kalau kata orang tentang teteh itu salah 💪"},
-  {img:"images/D4.png",text:"Aa yakin teteh bakal capai apa yang teteh impikan, jangan menyerah ya teh 🌟"},
-  {img:"images/D5.png",text:"Setiap langkah yang teteh ambil, aa selalu ada di belakang teteh 🤍"},
+  {img:"images/D4.png",text:"Aa yakin teteh bakal capai apa yang teteh impikan, jangan menyerah ya teh ⚡"},
+  {img:"images/D5.png",text:"Setiap langkah yang teteh ambil, aa selalu ada di belakang teteh 🌟"},
   {img:"images/D6.png",text:"Kalau lelah, inget aa selalu ada buat teteh, support teteh sampai akhir 🖤"},
-  {img:"images/D last.jpg",text:"Semangat terus ya cantik, you can make it!! ✨"}
+  {img:"images/D_last.jpg",text:"Semangat terus ya cantik, you can make it!! ✨"}
 ];
 
 const slidesContainer=document.getElementById("slides");
@@ -68,15 +70,16 @@ const dotsContainer=document.getElementById("dots");
 const caption=document.getElementById("caption");
 const loading=document.getElementById("loading");
 const slideshow=document.getElementById("slideshow");
+const music=document.getElementById("bgMusic");
+
 let currentIndex=0;
-let startX=0;
-let isDragging=false;
 let typeTimeouts=[];
 
-// buat slides & dots
+// create slides & dots
 slidesData.forEach((slide,index)=>{
   const s=document.createElement("div");
   s.classList.add("slide");
+  if(index===0)s.classList.add("active");
   s.innerHTML=`<img src="${slide.img}" alt="Slide ${index+1}">`;
   slidesContainer.appendChild(s);
 
@@ -109,47 +112,48 @@ function showCaption(index){
   type();
 }
 
-// pindah slide
+// move to slide
 function moveToSlide(index){
-  if(index<0) index=slidesData.length-1;
-  if(index>=slidesData.length) index=0;
-  currentIndex=index;
-  slidesContainer.style.transform=`translateX(-${index*100}%)`;
+  slides.forEach(s=>s.classList.remove("active"));
+  slides[index].classList.add("active");
   dots.forEach(d=>d.classList.remove("active"));
   dots[index].classList.add("active");
+  currentIndex=index;
   showCaption(index);
 }
 
+// auto-slide every 6 sec
+function nextSlide(){
+  currentIndex=(currentIndex+1)%slidesData.length;
+  moveToSlide(currentIndex);
+}
+setInterval(nextSlide,6000);
+
 // swipe / drag
-slidesContainer.addEventListener("mousedown",e=>{
-  startX=e.pageX;
-  isDragging=true;
-});
+let startX=0,isDragging=false;
+slidesContainer.addEventListener("mousedown",e=>{startX=e.pageX;isDragging=true;});
 slidesContainer.addEventListener("mouseup",e=>{
-  if(!isDragging) return;
+  if(!isDragging)return;
   const diff=e.pageX-startX;
-  if(diff>50) moveToSlide(currentIndex-1);
-  if(diff<-50) moveToSlide(currentIndex+1);
+  if(diff>50) currentIndex=(currentIndex-1+slidesData.length)%slidesData.length;
+  else if(diff<-50) currentIndex=(currentIndex+1)%slidesData.length;
+  moveToSlide(currentIndex);
   isDragging=false;
 });
-slidesContainer.addEventListener("touchstart",e=>startX=e.touches[0].clientX);
-slidesContainer.addEventListener("touchend",e=>{
-  const diff=e.changedTouches[0].clientX-startX;
-  if(diff>50) moveToSlide(currentIndex-1);
-  if(diff<-50) moveToSlide(currentIndex+1);
-});
+slidesContainer.addEventListener("mouseleave",()=>{isDragging=false;});
 
-// init function with fade-out loading
+// init with music preload
 function initSlideshow(){
+  music.play().catch(()=>{}); 
   loading.style.opacity=0;
   setTimeout(()=>{
     loading.style.display="none";
     slideshow.style.display="block";
-    moveToSlide(0);
+    showCaption(0);
   },800);
 }
 
-// simulate loading 3 detik
+// simulate loading 3 sec
 setTimeout(initSlideshow,3000);
 </script>
 </body>
